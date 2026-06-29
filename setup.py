@@ -20,7 +20,42 @@ if not os.path.exists(env_path):
     print("2. Configuration Gmail...")
     gmail = input("   Votre adresse Gmail : ").strip()
     pwd   = input("   Votre App Password (16 chars) : ").strip()
-    excel = input("   Chemin vers le fichier Excel tracker : ").strip()
+
+    # Auto-detect Excel file in common locations
+    import glob
+    home = os.path.expanduser("~")
+    search_dirs = [
+        os.path.join(home, "Downloads"),
+        os.path.join(home, "Desktop"),
+        os.path.join(home, "Documents"),
+        home,
+    ]
+    found = []
+    for d in search_dirs:
+        found += glob.glob(os.path.join(d, "*.xlsx"))
+
+    excel = ""
+    trees_files = [f for f in found if "trees" in f.lower() or "prospect" in f.lower() or "contact" in f.lower()]
+
+    if trees_files:
+        print(f"\n   Fichier Excel detecte automatiquement :")
+        for i, f in enumerate(trees_files):
+            print(f"   [{i+1}] {f}")
+        if len(trees_files) == 1:
+            confirm = input(f"\n   Utiliser ce fichier ? (O/n) : ").strip().lower()
+            excel = trees_files[0] if confirm != "n" else ""
+        else:
+            choice = input(f"\n   Choisir le numero (1-{len(trees_files)}) : ").strip()
+            try: excel = trees_files[int(choice)-1]
+            except: excel = ""
+
+    if not excel:
+        print("\n   Fichier Excel non detecte automatiquement.")
+        print("   Ouvre ton fichier Excel, regarde en haut de la fenetre :")
+        print("   ex: C:\\Users\\Prenom\\Downloads\\contacts.xlsx")
+        print("   Copie ce chemin complet et colle-le ici.")
+        excel = input("\n   Chemin du fichier Excel : ").strip().strip('"')
+
     with open(env_path, "w") as f:
         f.write(f"GMAIL_ADDRESS={gmail}\n")
         f.write(f"GMAIL_APP_PASSWORD={pwd}\n")
